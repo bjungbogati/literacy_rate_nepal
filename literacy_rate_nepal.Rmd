@@ -1,0 +1,219 @@
+---
+title: "Literacy population of Age group (15-24)"
+author: "Binod Jung Bogati"
+date: "7/19/2018"
+output: 
+  html_document:
+    keep_md: yes
+    theme: readable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+```
+
+
+The data set is provided by Open Nepal which contains literacy population of age group (15-24) based on zone, region, districts.
+
+# Import the data file
+
+```{r}
+literacy <- read.csv("./data/literacy-rate.csv", stringsAsFactors = FALSE)
+
+head(literacy)
+```
+
+
+
+# Rename the column headers
+
+```{r}
+names(literacy) <- c("district", "zone", "geo_region", "dev_region", "group", "gender", "population")
+
+head(literacy)
+```
+
+
+
+# Rename the population sub-groups
+
+```{r}
+# get number of rows
+nrow(literacy)
+
+# renaming is needed for any long names
+pop <- lapply(literacy$group, function(x) if(x == "Literate Population by age 15 - 24 "){ x = "literate_pop"} else{ x = "total_pop" } )
+literacy$group <- sapply(pop, paste0, collapse="") 
+
+# cleaning gender column
+
+library(stringr)
+library(dplyr)
+
+replace_sp <- "[[:space:]].*"
+
+literacy <- literacy %>% 
+  mutate(gender = str_replace_all(gender, replace_sp, "")) 
+
+```
+
+# Get the literate population
+
+```{r}
+literacy_pop <- literacy %>% 
+  filter(group == "literate_pop")
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(literacy_pop, aes(x = gender, y = population)) +
+  geom_bar(stat = "identity", aes(fill = zone), position = "dodge") +
+  ggtitle("Literate Population of Age (15 - 24) by Zones")
+
+```
+
+
+
+# Literate population by gender
+
+```{r}
+get_population <- literacy %>% 
+  filter(group == "total_pop")
+
+head(get_population)
+```
+
+```{r}
+total_male <- get_population %>% 
+  filter(gender == "Male")
+
+total_male_pop <- sum(total_male$population)
+
+total_male_pop
+
+```
+```{r}
+total_female <- get_population %>% 
+  filter(gender == "Female")
+
+total_female_pop <- sum(total_female$population)
+total_female_pop
+```
+
+# Total population of age group 15-24
+
+```{r}
+total_population <- total_male_pop + total_female_pop
+total_population
+```
+
+# Total literate population
+
+```{r}
+
+head(literacy_pop)
+
+literate_male <- literacy_pop %>% 
+  filter(gender == "Male")
+
+head(literate_male)
+
+total_literate_male <- sum(literate_male$population)
+total_literate_male
+```
+
+```{r}
+literate_female <- literacy_pop %>% 
+  filter(gender == "Female")
+
+total_literate_female <- sum(literate_female$population)
+total_literate_female
+```
+
+# Total literate population of age group (15-24)
+
+```{r}
+total_literate_population <- total_literate_male + total_literate_female
+total_literate_population
+```
+
+# Total illiterate population of age group (15-24)
+
+```{r}
+illiterate_population <- total_population - total_literate_population
+illiterate_population
+```
+
+# Creating a dataframe
+
+```{r}
+population_summary <- data.frame(
+  c("literate_pop", "literate_pop", "total_pop", "total_pop"),
+  c("male", "female", "male", "female"), 
+  c(2234745, 2246814, 2487172, 2802879), stringsAsFactors = FALSE)
+
+names(population_summary) <- c("group", "gender", "population")
+
+head(population_summary)
+```
+
+```{r}
+
+literate_gender <- population_summary %>% 
+  filter(group == "literate_pop")
+
+literate_gender$percent[1] <- literate_gender$population[1] / sum(literate_gender$population) * 100
+literate_gender$percent[2] <-  literate_gender$population[2] / sum(literate_gender$population) * 100
+
+ggplot(literate_gender, aes(x = "", y = population, fill = gender)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  coord_polar("y", start=0) +
+  labs(title="Literate Population by Gender (Age 15-24)", caption= "Female : 49.87 % \n Male : 50.13 %") +
+  geom_text(aes(label = population), position = position_stack(vjust = 0.5), size = 3) 
+```
+
+
+```{r}
+eastern_region <- literacy %>% 
+  filter(dev_region == "Eastern")
+
+literate_east <- eastern_region %>% 
+  filter(group == "literate_pop")
+
+total_east <- eastern_region %>% 
+  filter(group == "total_pop")
+
+```
+
+```{r}
+ggplot(literate_east, aes(x = gender, y = population)) +
+  geom_bar(stat = "identity", aes(fill = zone), position = "dodge") +
+  ggtitle("Literacy population (Age: 15-24) of Eastern Region")
+
+ggplot(total_east, aes(x = gender, y = population)) +
+  geom_bar(stat = "identity", aes(fill = zone), position = "dodge") +
+  ggtitle("Total population (Age: 15-24) of Eastern Region")
+  
+```
+
+```{r}
+literacy_sagarmatha <- literate_east %>% 
+  filter(zone == "Sagarmatha")
+
+total_sagarmatha <- total_east %>% 
+  filter(zone == "Sagarmatha")
+
+```
+
+```{r}
+
+ggplot(literacy_sagarmatha, aes(x = district, y = population)) +
+  geom_bar(stat = "identity", aes(fill = gender), position = "dodge") +
+  ggtitle("Literate population of Sagarmatha zone (Age 15-24)")
+
+ggplot(total_sagarmatha, aes(x = district, y = population)) +
+  geom_bar(stat = "identity", aes(fill = gender), position = "dodge") +
+  ggtitle("Total population of Sagarmatha zone (Age 15-24)")
+```
+
