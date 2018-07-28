@@ -289,7 +289,7 @@ literate_gender$percent[2] <-  literate_gender$population[2] / sum(literate_gend
 ggplot(literate_gender, aes(x = "", y = population, fill = gender)) +
   geom_bar(stat = "identity", width = 0.5) +
   coord_polar("y", start=0) +
-  labs(title="Literate Population by Gender (Age 15-24)", caption= "Female : 49.87 % \n Male : 50.13 %") +
+  labs(title="Literate Population by Gender (Age 15-24)", caption= "Male : 49.87 % \n Female : 50.13 %") +
   geom_text(aes(label = population), position = position_stack(vjust = 0.5), size = 3) 
 ```
 
